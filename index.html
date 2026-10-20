@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Skyline Tycoon – an idle city-building tycoon</title>
+<meta name="description" content="Build a skyline, hire staff, rebrand for permanent Fame. A free offline idle tycoon game for desktop.">
+<meta name="theme-color" content="#070b1d"><meta property="og:title" content="Skyline Tycoon"><meta property="og:description" content="A free idle tycoon game. Build floors, earn Fame, rule the skyline."><meta property="og:type" content="website">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+*{box-sizing:border-box;margin:0;user-select:none}
+:root{--g:#ffd34d;--p:rgba(14,18,44,.74);--b:rgba(255,255,255,.13);--a:#5eead4}
+body{font:14px 'Segoe UI',system-ui,sans-serif;color:#eef;background:#070b1d;overflow:hidden;height:100vh}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+#fx{z-index:60;pointer-events:none}
+#app{position:relative;z-index:1;height:100vh;display:grid;grid-template-rows:68px 1fr;gap:10px;padding:10px 14px}
+header{display:flex;align-items:center;gap:18px;padding:0 18px;background:var(--p);border:1px solid var(--b);border-radius:16px;backdrop-filter:blur(10px)}
+.logo{font-weight:900;letter-spacing:3px;font-size:15px;line-height:1}.logo b{display:block;color:var(--g);font-size:19px}
+#cash{font-size:30px;font-weight:800;color:var(--g);text-shadow:0 0 18px rgba(255,211,77,.5);min-width:210px}
+#inc{color:var(--a);font-weight:600;flex:1}
+.pill,header button{background:rgba(255,255,255,.08);border:1px solid var(--b);color:#fff;padding:8px 14px;border-radius:99px;font:600 13px inherit;cursor:pointer}
+header button:hover{background:rgba(255,255,255,.18)}
+#cols{display:grid;grid-template-columns:310px 1fr 330px;gap:10px;min-height:0}
+.pn{background:var(--p);border:1px solid var(--b);border-radius:16px;padding:14px;overflow:auto;backdrop-filter:blur(10px)}
+.pn::-webkit-scrollbar{width:6px}.pn::-webkit-scrollbar-thumb{background:#fff3;border-radius:9px}
+#L{text-align:center}
+.av{width:170px;height:170px;margin:4px auto 8px;border-radius:50%;display:grid;place-items:center;cursor:pointer;background:radial-gradient(circle at 35% 30%,#7c6cff,#2a2f7a 60%,#14183f);box-shadow:0 0 0 4px #ffd34d55,0 0 40px #7c6cff88;transition:transform .08s;animation:bob 2.2s ease-in-out infinite alternate}
+.av span{font-size:96px;filter:drop-shadow(0 6px 8px #0008);pointer-events:none}
+.av:hover{box-shadow:0 0 0 4px var(--g),0 0 55px #ffd34daa}.av.hit{transform:scale(.9)}
+@keyframes bob{to{translate:0 -8px}}
+#cn{font-weight:800;font-size:17px}
+.cb{height:8px;background:#fff2;border-radius:9px;margin:8px 0;overflow:hidden}.cb u{display:block;height:100%;width:0;background:linear-gradient(90deg,#5eead4,#ffd34d,#ff6b6b)}
+small{color:#a9b0d8;display:block}
+#tw{position:static;width:100%;height:auto;margin-top:8px;border-radius:12px;background:#0b1030aa}
+#st{text-align:left;font-size:12.5px;line-height:1.7;color:#c9cef0;margin-top:8px}
+.fl{display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:8px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--b);position:relative;transition:.2s}
+.fl.lock{opacity:.35;filter:grayscale(1)}
+.ic{font-size:34px;width:52px;height:52px;display:grid;place-items:center;background:#ffffff14;border-radius:14px}
+.mid{flex:1;min-width:0}.mid b{font-size:15px}.mid i{font-style:normal;color:var(--g);font-size:12px;margin-left:6px}
+.bar{height:7px;background:#fff2;border-radius:9px;margin-top:6px;overflow:hidden}
+.bar u{display:block;height:100%;width:0;background:linear-gradient(90deg,#5eead4,#7c6cff)}
+.fl.run .bar u{animation:fill var(--d,3s) linear infinite}
+@keyframes fill{from{width:0}to{width:100%}}
+.buy{min-width:128px;padding:9px;border:0;border-radius:12px;font:700 13px inherit;color:#1a1300;background:linear-gradient(#ffe27a,#ffb82e);cursor:pointer;box-shadow:0 4px 0 #b07800;transition:.1s}
+.buy:active{transform:translateY(3px);box-shadow:0 1px 0 #b07800}.buy em{display:block;font-style:normal;font-weight:600;font-size:12px}
+.off{filter:grayscale(.9) brightness(.7);cursor:not-allowed!important}
+kbd{position:absolute;top:4px;right:6px;font-size:10px;color:#8890c0}
+#tabs{display:flex;gap:6px;margin-bottom:10px}
+#tabs button{flex:1;padding:8px;border-radius:10px;border:1px solid var(--b);background:#ffffff0f;color:#cfd3f5;font:700 12px inherit;cursor:pointer}
+#tabs button.on{background:var(--g);color:#1a1300}
+.card{padding:11px 13px;margin-bottom:8px;border-radius:13px;background:#ffffff0f;border:1px solid var(--b);cursor:pointer;transition:.15s}
+.card:hover{background:#ffffff1c}.card.dim{opacity:.4}.card.sel{border-color:var(--g);box-shadow:0 0 16px #ffd34d44}
+.card em{float:right;font-style:normal;color:var(--g);font-weight:700}
+.big{width:100%;padding:12px;border:0;border-radius:12px;font:800 14px inherit;color:#fff;background:linear-gradient(90deg,#7c6cff,#ff5fa2);cursor:pointer;margin-bottom:10px}
+.drone{position:fixed;z-index:40;font-size:44px;cursor:pointer;transition:left 10s linear;filter:drop-shadow(0 0 14px gold);animation:bob .8s ease-in-out infinite alternate}
+#toast{position:fixed;bottom:26px;left:50%;translate:-50% 0;z-index:90;background:#000c;border:1px solid var(--g);padding:11px 22px;border-radius:99px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.av,.drone{animation:none}.fl.run .bar u{animation-duration:12s}}
+</style></head><body>
+<canvas id="bg"></canvas><canvas id="fx"></canvas><div id="toast"></div>
+<div id="app">
+<header><div class="logo">SKYLINE<b>TYCOON</b></div><div id="cash">$0</div><div id="inc"></div><div class="pill" id="fame"></div><button id="amt"></button><button id="mute"></button></header>
+<main id="cols">
+<section class="pn" id="L"><div class="av" id="av"><span id="avi"></span></div><div id="cn"></div><div class="cb"><u id="cbar"></u></div><small>Click or SPACE to hustle · fast taps build combo</small><canvas id="tw" width="280" height="250"></canvas><div id="st"></div></section>
+<section class="pn" id="M"></section>
+<section class="pn" id="R"><div id="tabs"></div><div id="rb"></div></section>
+</main></div>
+<script>
+const $=s=>document.querySelector(s),KEY='skylineTycoon_v1',N=25,G=1.1;
+const NM=['Lemonade Stand','Coffee Cart','Bakery','Arcade','Boutique','Gym','Cinema','Sushi Bar','Tech Startup','City Bank','Grand Hotel','Casino','Film Studio','Bio Lab','Airline','Shipyard','Spaceport','Moon Base','Mars Colony','AI Core','Time Lab','Dyson Swarm','Black Hole Mine','Dimension Gate','Universe Forge'];
+const IC=['🍋','☕','🥐','🕹️','👗','🏋️','🎬','🍣','💻','🏦','🏨','🎰','🎥','🧪','✈️','🚢','🚀','🌙','🔴','🤖','⏳','☀️','🕳️','🌀','🌌'];
+const F=NM.map((n,i)=>({n,ic:IC[i],c:15*Math.pow(13,i),b:Math.pow(9,i)}));
+const MS=[25,50,100,200,300,400,500,750,1000];
+const CH=[{n:'Rookie',e:'🧑‍🎓',u:0,tap:1,inc:1,cost:1,d:'Fresh out of school.'},{n:'Hustler',e:'🤠',u:3,tap:5,inc:1,cost:1,d:'x5 tap power'},{n:'Banker',e:'🧑‍💼',u:15,tap:1,inc:1.5,cost:1,d:'+50% income'},{n:'Foreman',e:'👷',u:60,tap:2,inc:1,cost:.85,d:'-15% costs, x2 tap'},{n:'Mogul',e:'🕴️',u:250,tap:3,inc:3,cost:1,d:'x3 income, x3 tap'},{n:'Cyber CEO',e:'🤖',u:1000,tap:8,inc:5,cost:.8,d:'x5 income, -20% costs, x8 tap'}];
+const SH=[{n:'Golden Touch',d:'x2 tap power',c:l=>5*Math.pow(3,l),m:50},{n:'Night Shift',d:'+4h offline earning cap',c:l=>3*Math.pow(2,l),m:12},{n:'Bulk Deals',d:'-3% all floor costs',c:l=>10*Math.pow(2.5,l),m:10},{n:'Drone Magnet',d:'Bonus drones arrive faster',c:l=>4*Math.pow(2,l),m:8}];
+const UN=['Flyers','Neon Signs','Loyalty Cards','Viral Ads','Franchising','Robo Staff','AI Pricing','Hyperloop Deals','Orbital Billboards','Quantum Ledger','Time-Share','Galactic Brand','Reality Rebrand','Legend Status'];
+const ACH=[['First Steps','Build your first floor',()=>S.lv[0]>0],['Tap Happy','Tap 1,000 times',()=>S.taps>=1000],['Millionaire','Earn $1M lifetime',()=>S.all>=1e6],['Skyscraper','Own 10 different floors',()=>S.lv.filter(x=>x).length>=10],['Century','Level any floor to 100',()=>Math.max(...S.lv)>=100],['Rebrander','Rebrand for the first time',()=>S.fe>=1],['Rising Star','Reach 50 Fame',()=>S.fe>=50],['Universe Owner','Build all 25 floors',()=>S.lv.every(x=>x)]];
+const unm=k=>UN[k]||'Cosmic Contract '+(k-UN.length+1),ucost=k=>1e3*Math.pow(35,k);
+const SUF=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc','Ud','Dd','Td','Qad','Qid','Sxd','Spd','Ocd','Nod','Vg'];
+function fmt(n){if(!isFinite(n))return '∞';if(n<1000)return(+n.toFixed(n<10?2:1)).toString();const e=Math.floor(Math.log10(n)/3);return e>=SUF.length?n.toExponential(2).replace('+',''):(n/Math.pow(10,e*3)).toFixed(2)+SUF[e]}
+function load(){const d={v:2,cash:15,run:0,all:0,fe:0,sp:0,lv:Array(N).fill(0),up:0,shop:[0,0,0,0],ch:0,last:Date.now(),taps:0,ach:[],mute:false};try{const s=JSON.parse(localStorage.getItem(KEY));if(s)Object.assign(d,s)}catch(e){}
+ if(!Array.isArray(d.lv)||d.lv.length!=N||d.lv.some(x=>!isFinite(x)))d.lv=Array(N).fill(0);if(!Array.isArray(d.ach))d.ach=[];if(!Array.isArray(d.shop)||d.shop.length<4)d.shop=[0,0,0,0];
+ ['cash','run','all','fe','sp','up','taps'].forEach(k=>{if(!isFinite(d[k])||d[k]<0)d[k]=k=='cash'?15:0});if(!CH[d.ch]||CH[d.ch].u>d.fe)d.ch=0;d.v=2;return d}
+let S=load(),TAB=0,AMT=1,combo=0,lastTap=0,boost=0,inc=0,gm=1,droneT=35,noSave=false;
+const AMTS=[1,10,100,'max'];
+function save(){if(noSave)return;S.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+addEventListener('beforeunload',save);
+const ms=l=>MS.filter(m=>m<=l).length,nextMs=l=>MS.find(m=>m>l)||Math.ceil((l+1)/500)*500;
+const cmult=()=>CH[S.ch].cost*Math.max(.3,1-.03*S.shop[2]);
+const costN=(i,n)=>F[i].c*Math.pow(G,S.lv[i])*(Math.pow(G,n)-1)/(G-1)*cmult();
+const maxN=i=>{const a=S.cash*(G-1)/(F[i].c*Math.pow(G,S.lv[i])*cmult())+1;return Math.max(0,Math.floor(Math.log(a)/Math.log(G)))};
+const amt=i=>AMT==='max'?Math.max(1,maxN(i)):AMT;
+function calc(){gm=Math.pow(2,S.up)*CH[S.ch].inc*(1+.1*S.fe)*(1+.05*S.ach.length)*(boost>0?2:1);let t=0;for(let i=0;i<N;i++){const l=S.lv[i];if(l)t+=F[i].b*l*Math.pow(2,ms(l))}inc=Math.min(t*gm,1e290)}
+const tapVal=()=>(1+inc*.08)*CH[S.ch].tap*Math.pow(2,S.shop[0])*(1+Math.min(combo,60)/30);
+const gain=v=>{S.cash=Math.min(S.cash+v,1e300);S.run=Math.min(S.run+v,1e300);S.all=Math.min(S.all+v,1e300)};
+function toast(t){const e=$('#toast');e.textContent=t;e.style.opacity=1;clearTimeout(e.t);e.t=setTimeout(()=>e.style.opacity=0,2600)}
+function buy(i){if(i>0&&!S.lv[i-1])return;const n=amt(i);if(AMT==='max'&&maxN(i)<1)return;const c=costN(i,n);if(S.cash>=c){S.cash-=c;S.lv[i]+=n;calc();snd.buy();const r=$('#f'+i).getBoundingClientRect();burst(r.x+r.width-70,r.y+10,'Lv '+S.lv[i]);if(ms(S.lv[i])>ms(S.lv[i]-n))(toast('🎉 '+NM[i]+' milestone: income x2!'),snd.ach())}}
+function buyUp(){const c=ucost(S.up);if(S.cash>=c){S.cash-=c;S.up++;calc();renderR()}}
+function cyc(d){let k=S.ch;do{k=(k+d+CH.length)%CH.length}while(CH[k].u>S.fe);S.ch=k;calc();renderR()}
+function cycleAmt(){AMT=AMTS[(AMTS.indexOf(AMT)+1)%4]}
+function tap(x,y){combo=Math.min(combo+1,60);snd.tap();lastTap=performance.now();S.taps++;const v=tapVal();gain(v);burst(x,y,'+'+fmt(v))}
+const pending=()=>Math.max(0,Math.floor(Math.sqrt(S.all/1e7))-S.fe);
+function rebrand(){const p=pending();if(p<1)return;if(!confirm('Rebrand your empire for +'+p+' Fame?\nFloors, cash and upgrades reset. Fame, characters and shop upgrades stay forever.'))return;S.fe+=p;S.cash=15;S.run=0;S.lv=Array(N).fill(0);S.up=0;calc();renderR();toast('⭐ Rebranded! +'+p+' Fame');snd.reb();save()}
+/* ---------- Sound & save IO ---------- */
+let ax=null;
+function tone(f,d,ty='sine',v=.07,at=0){if(S.mute)return;try{ax=ax||new(window.AudioContext||window.webkitAudioContext)();if(ax.state=='suspended')ax.resume();const t=ax.currentTime+at,o=ax.createOscillator(),g=ax.createGain();o.type=ty;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(ax.destination);o.start(t);o.stop(t+d)}catch(e){}}
+const snd={tap:()=>tone(520+combo*10,.08,'triangle',.05),buy:()=>{tone(440,.1,'square',.03);tone(660,.14,'square',.03,.08)},ach:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.25,'sine',.06,i*.09)),drone:()=>{tone(300,.5,'sawtooth',.03);tone(450,.5,'sawtooth',.03,.15)},reb:()=>[262,392,523,784].forEach((f,i)=>tone(f,.4,'triangle',.07,i*.12))};
+function exportSave(){save();const c=btoa(JSON.stringify(S)),ask=()=>prompt('Copy your save code:',c);navigator.clipboard?navigator.clipboard.writeText(c).then(()=>toast('Save code copied to clipboard'),ask):ask()}
+function importSave(){const c=prompt('Paste your save code (this REPLACES current progress):');if(!c)return;try{const d=JSON.parse(atob(c.trim()));if(!Array.isArray(d.lv)||typeof d.cash!='number')throw 0;localStorage.setItem(KEY,JSON.stringify(d));noSave=true;location.reload()}catch(e){toast('Invalid save code')}}
+/* ---------- UI ---------- */
+const M=$('#M'),av=$('#av');let els=[];
+M.innerHTML=F.map((f,i)=>`<div class="fl" id="f${i}"><div class="ic">${f.ic}</div><div class="mid"><b>${f.n}<i></i></b><small></small><div class="bar"><u></u></div></div><button class="buy" data-i="${i}"><span></span><em></em></button>${i<10?`<kbd>${(i+1)%10}</kbd>`:''}</div>`).join('');
+els=F.map((f,i)=>{const e=$('#f'+i);e.style.setProperty('--d',(2+i*.35)+'s');return{e,lv:e.querySelector('i'),sm:e.querySelector('small'),bt:e.querySelector('.buy'),a:e.querySelector('span'),c:e.querySelector('em')}});
+M.onclick=e=>{const b=e.target.closest('.buy');if(b)buy(+b.dataset.i)};
+av.onmousedown=e=>{tap(e.clientX,e.clientY);av.classList.add('hit');setTimeout(()=>av.classList.remove('hit'),80)};
+$('#amt').onclick=cycleAmt;$('#mute').onclick=()=>S.mute=!S.mute;
+function renderR(){
+ $('#tabs').innerHTML=['💼 Up','🧑‍💼 Staff','⭐ Fame','🏆'].map((t,i)=>`<button class="${i==TAB?'on':''}" data-t="${i}">${t}</button>`).join('');
+ let h='';
+ if(TAB==0){h='<small style="margin-bottom:8px">Each upgrade doubles ALL income. [U] buys the next one.</small>';for(let k=S.up;k<S.up+5;k++)h+=`<div class="card ${k>S.up?'dim':''}" data-up="${k}" ${k==S.up?`data-c="${ucost(k)}"`:''}><em>$${fmt(ucost(k))}</em><b>${unm(k)}</b><small>All income x2</small></div>`}
+ else if(TAB==1){h='<small style="margin-bottom:8px">Earn Fame to unlock staff. [Q]/[E] to switch.</small>';h+=CH.map((c,i)=>`<div class="card ${S.ch==i?'sel':''} ${c.u>S.fe?'dim':''}" data-ch="${i}"><em>${c.u>S.fe?'🔒 '+c.u+' ⭐':S.ch==i?'ACTIVE':''}</em><b>${c.e} ${c.n}</b><small>${c.d}</small></div>`).join('')}
+ else if(TAB==3){h='<small style="margin-bottom:8px">Each achievement gives +5% income, permanently.</small>'+ACH.map((a,i)=>`<div class="card ${S.ach.includes(i)?'sel':'dim'}"><em>${S.ach.includes(i)?'✔':''}</em><b>${a[0]}</b><small>${a[1]}</small></div>`).join('')}
+ else{const p=pending();h=`<button class="big ${p<1?'off':''}" id="rb2">🏙️ REBRAND: +${p} Fame</button><small style="margin-bottom:10px">Fame gives +10% income each, forever. You have ${S.fe-S.sp} to spend (${S.fe} earned). Next Fame needs ${fmt(1e7*Math.pow(S.fe+1,2))} lifetime earnings.</small>`;
+  h+=SH.map((s,i)=>{const l=S.shop[i],mx=l>=s.m;return `<div class="card ${mx?'dim':''}" data-sh="${i}" ${mx?'':`data-f="${s.c(l)}"`}><em>${mx?'MAX':Math.ceil(s.c(l))+' ⭐'}</em><b>${s.n} <small style="display:inline">Lv ${l}</small></b><small>${s.d}</small></div>`}).join('');
+  h+='<button class="big" style="background:#ffffff14;margin-top:10px" id="ex">📤 Export save code</button><button class="big" style="background:#ffffff14" id="im">📥 Import save code</button><button class="big" style="background:#ffffff14" id="hr">Hard reset save</button>'}
+ $('#rb').innerHTML=h}
+$('#R').onclick=e=>{const t=e.target.closest('[data-t]');if(t){TAB=+t.dataset.t;renderR();return}
+ const u=e.target.closest('[data-up]');if(u&&+u.dataset.up==S.up)buyUp();
+ const c=e.target.closest('[data-ch]');if(c&&CH[+c.dataset.ch].u<=S.fe){S.ch=+c.dataset.ch;calc();renderR()}
+ const s=e.target.closest('[data-sh]');if(s){const i=+s.dataset.sh,l=S.shop[i],k=Math.ceil(SH[i].c(l));if(l<SH[i].m&&S.fe-S.sp>=k){S.sp+=k;S.shop[i]++;renderR()}}
+ if(e.target.id=='rb2')rebrand();if(e.target.id=='ex')exportSave();if(e.target.id=='im')importSave();
+ if(e.target.id=='hr'&&confirm('Delete ALL progress permanently?')){noSave=true;localStorage.removeItem(KEY);location.reload()}};
+function updUI(){
+ $('#cash').textContent='$'+fmt(S.cash);$('#inc').textContent='▲ '+fmt(inc)+' / sec'+(boost>0?'   ⚡ BOOST x2 · '+boost.toFixed(0)+'s':'');
+ $('#fame').textContent='⭐ '+(S.fe-S.sp)+' Fame · +'+(10*S.fe)+'%';$('#amt').textContent='Buy '+(AMT=='max'?'MAX':'x'+AMT)+'  [B]';
+ $('#mute').textContent=S.mute?'🔇 [M]':'🔊 [M]';ACH.forEach((a,i)=>{if(!S.ach.includes(i)&&a[2]()){S.ach.push(i);calc();toast('🏆 '+a[0]+' (+5% income)');snd.ach();if(TAB==3)renderR()}});
+ $('#cbar').style.width=combo/60*100+'%';$('#avi').textContent=CH[S.ch].e;$('#cn').textContent=CH[S.ch].n;
+ for(let i=0;i<N;i++){const o=els[i],l=S.lv[i],lock=i>0&&!S.lv[i-1],n=amt(i),c=costN(i,n);
+  o.e.classList.toggle('lock',lock);o.e.classList.toggle('run',l>0);o.lv.textContent=l?'Lv '+l:'';
+  o.sm.textContent=l?'+'+fmt(F[i].b*l*Math.pow(2,ms(l))*gm)+'/s · next x2 at Lv '+nextMs(l):'Income '+fmt(F[i].b*gm)+'/s per level';
+  o.a.textContent=lock?'🔒 Locked':(l?'Upgrade':'Build')+' x'+n;o.c.textContent=lock?'':'$'+fmt(c);
+  o.bt.classList.toggle('off',lock||S.cash<c||(AMT=='max'&&maxN(i)<1))}
+ document.querySelectorAll('[data-c]').forEach(e=>e.classList.toggle('off',S.cash<+e.dataset.c));
+ document.querySelectorAll('[data-f]').forEach(e=>e.classList.toggle('off',S.fe-S.sp<+e.dataset.f));
+ const rb=$('#rb2');if(rb){const p=pending();rb.textContent='🏙️ REBRAND: +'+p+' Fame';rb.classList.toggle('off',p<1)}
+ const owned=S.lv.filter(x=>x).length,pt=Math.floor((Date.now()-(S.t0||(S.t0=Date.now())))/6e4);
+ $('#st').innerHTML=`Tap power: <b>$${fmt(tapVal())}</b><br>Floors built: <b>${owned}/${N}</b><br>Run earnings: <b>$${fmt(S.run)}</b><br>Lifetime: <b>$${fmt(S.all)}</b><br>Total taps: <b>${S.taps}</b>`}
+/* ---------- Graphics ---------- */
+const bg=$('#bg'),bx=bg.getContext('2d'),fx=$('#fx'),fc=fx.getContext('2d');let W,H;
+function rs(){W=bg.width=fx.width=innerWidth;H=bg.height=fx.height=innerHeight}onresize=rs;rs();
+const stars=Array.from({length:140},()=>({x:Math.random(),y:Math.random()*.6,r:Math.random()*1.3+.3,p:Math.random()*6}));
+const lay=[0,1,2].map(k=>{let a=[],x=0;while(x<2400){const w=40+Math.random()*70,h=(60+Math.random()*150)*(1+k*.45);a.push({x,w,h});x+=w+Math.random()*8}return a});
+function drawBG(t){const d=(Math.sin(t/40000)+1)/2,g=bx.createLinearGradient(0,0,0,H);
+ g.addColorStop(0,`hsl(${235+d*30},55%,${5+d*10}%)`);g.addColorStop(1,`hsl(${275-d*45},60%,${14+d*18}%)`);bx.fillStyle=g;bx.fillRect(0,0,W,H);
+ stars.forEach(s=>{bx.globalAlpha=Math.max(0,(.4+.6*Math.sin(t/700+s.p))*(1-d*.8));bx.fillStyle='#fff';bx.beginPath();bx.arc(s.x*W,s.y*H,s.r,0,7);bx.fill()});bx.globalAlpha=1;
+ lay.forEach((L,k)=>{const off=(t*(.008+k*.012))%2400;bx.fillStyle=`hsl(250,45%,${7+k*5}%)`;
+  for(let r=-1;r<=Math.ceil(W/2400);r++)L.forEach((b,bi)=>{const x=b.x+r*2400-off;if(x>W||x+b.w<0)return;bx.fillRect(x,H-b.h,b.w,b.h);
+   if(k==2){for(let y=H-b.h+10;y<H-8;y+=14)for(let xx=x+6;xx<x+b.w-8;xx+=12)if((bi*7+(y>>4)*3+(xx>>4))%5<2){bx.fillStyle='#ffe9a044';bx.fillRect(xx,y,5,7)}bx.fillStyle=`hsl(250,45%,${7+k*5}%)`}})})}
+const tw=$('#tw'),tc=tw.getContext('2d');
+function drawTW(t){tc.clearRect(0,0,280,250);tc.fillStyle='#1a2150';tc.fillRect(0,234,280,16);
+ const own=[];S.lv.forEach((l,i)=>l&&own.push(i));const n=own.length;if(!n){tc.fillStyle='#8890c0';tc.font='13px Segoe UI';tc.textAlign='center';tc.fillText('Build your first floor!',140,130);return}
+ const sh=Math.min(26,200/n);own.forEach((i,j)=>{const y=234-(j+1)*sh;tc.fillStyle=`hsl(${i*14+190},55%,${26+(j%2)*5}%)`;tc.fillRect(70,y,140,sh-1);
+  for(let k=0;k<6;k++){tc.fillStyle=Math.sin(t/900+i*3+k*1.7)>-.3?'#ffe9a0':'#222a55';tc.fillRect(78+k*21,y+sh*.25,12,sh*.5)}});
+ const top=234-n*sh;tc.strokeStyle='#8890c0';tc.lineWidth=2;tc.beginPath();tc.moveTo(140,top);tc.lineTo(140,top-22);tc.stroke();
+ tc.fillStyle=Math.sin(t/300)>0?'#ff4d4d':'#601';tc.beginPath();tc.arc(140,top-24,4,0,7);tc.fill()}
+const P=[];function burst(x,y,txt){if(P.length>300)return;P.push({x,y,vx:0,vy:-60,l:1,txt,k:0});for(let i=0;i<6;i++)P.push({x,y,vx:(Math.random()-.5)*320,vy:-Math.random()*340-80,l:1,txt:'🪙',k:1})}
+function drawFX(dt){fc.clearRect(0,0,W,H);fc.textAlign='center';for(let i=P.length-1;i>=0;i--){const p=P[i];p.l-=dt*(p.k?1.1:.9);if(p.l<=0){P.splice(i,1);continue}p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.k)p.vy+=900*dt;fc.globalAlpha=Math.min(1,p.l*1.5);
+ if(p.k){fc.font='20px serif';fc.fillText(p.txt,p.x,p.y)}else{fc.font='bold 22px Segoe UI';fc.lineWidth=4;fc.strokeStyle='#000a';fc.fillStyle='#ffd34d';fc.strokeText(p.txt,p.x,p.y);fc.fillText(p.txt,p.x,p.y)}}fc.globalAlpha=1}
+function spawnDrone(){const d=document.createElement('div');d.className='drone';d.textContent='🚁💰';d.style.top=(90+Math.random()*(H-320))+'px';d.style.left='-130px';document.body.appendChild(d);
+ requestAnimationFrame(()=>requestAnimationFrame(()=>d.style.left=(innerWidth+60)+'px'));
+ d.onclick=()=>{const v=inc*90+tapVal()*30;gain(v);boost=15;const r=d.getBoundingClientRect();burst(r.x,r.y,'+'+fmt(v));toast('🚁 Bonus drop! Income x2 for 15s');snd.drone();d.remove()};setTimeout(()=>d.remove(),10600)}
+/* ---------- Input ---------- */
+addEventListener('keydown',e=>{const k=e.key;
+ if(e.code=='Space'||k=='Enter'){e.preventDefault();if(e.repeat)return;const r=av.getBoundingClientRect();tap(r.x+r.width/2+(Math.random()-.5)*70,r.y+30);av.classList.add('hit');setTimeout(()=>av.classList.remove('hit'),70)}
+ else if(/^[0-9]$/.test(k))buy((+k+9)%10);
+ else if(k=='b'||k=='B')cycleAmt();else if(k=='u'||k=='U')buyUp();
+ else if(k=='q'||k=='Q')cyc(-1);else if(k=='e'||k=='E')cyc(1);
+ else if(k=='t'||k=='T'){TAB=(TAB+1)%4;renderR()}else if(k=='m'||k=='M')S.mute=!S.mute});
+addEventListener('keyup',e=>{if(e.code=='Space')e.preventDefault()});
+addEventListener('click',e=>e.target.blur&&e.target.blur());
+/* ---------- Loop ---------- */
+calc();renderR();
+function offline(){const away=Math.min(Date.now()-S.last,(8+4*S.shop[1])*36e5)/1000;if(away>30&&inc>0){const v=inc*away*.5;gain(v);toast('Welcome back! Earned $'+fmt(v)+' while away')}S.last=Date.now()}
+offline();addEventListener('visibilitychange',()=>{if(document.hidden)save();else{calc();offline()}});
+if(!S.taps&&!S.lv[0])setTimeout(()=>toast('Click the character or press SPACE to earn your first $15!'),700);
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+let lt=performance.now(),ut=0,sv=0;
+function loop(now){const dt=Math.min(.25,(now-lt)/1000);lt=now;gain(inc*dt);boost=Math.max(0,boost-dt);
+ if(now-lastTap>600)combo=Math.max(0,combo-60*dt);
+ if((droneT-=dt)<=0){spawnDrone();droneT=(40+Math.random()*50)/(1+.25*S.shop[3])}
+ if((ut+=dt)>.1){ut=0;calc();updUI()}if((sv+=dt)>5){sv=0;save()}
+ drawBG(now);drawTW(now);drawFX(dt);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+</script></body></html>
